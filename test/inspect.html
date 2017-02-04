@@ -17,14 +17,20 @@
 <!-- Now load the shams as well because inspect.js needs Array#filter. -->
 <script src="../../es5-shim/es5-sham.min.js"></script>
 
+<script modname="jerry">window.define({ someNumber: 42 });</script>
 <script src="../inspect.js"></script>
 <script>/*jslint indent: 2, maxlen: 80, browser: true */
 (function () {
   'use strict';
   var inspect = require('../inspect.js');
-  console.log('window:', require('window-pmb'));
-  console.log('names:', inspect.names());
+  console.log('names:', inspect.names().join('\n'));
   console.log('files:', inspect.files().join('\n'));
+
+  console.log('jerry:',       require('jerry'));
+
+  // default module fallbacks
+  console.log('window:',      require('window'));
+  console.log('window-pmb:',  require('window-pmb'));
 }());
 </script>
 

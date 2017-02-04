@@ -10,7 +10,8 @@ define(function (require, exports) {
   EX.names = function () {
     var names = [];
     Object.keys(modReg).map(function (key) {
-      if (key[0] === ':') { names[names.length] = key.substr(1); }
+      if (key.substr(0, 1) === ':') { names[names.length] = key.substr(1); }
+            // ^-- .substr: because in MSIE 6, 'foobar'[0] === undefined
     });
     return names;
   };
