@@ -25,7 +25,13 @@ Then what's it good for?
   a fully-featured loader could run into problems, including:
   * Package metadata missing or inaccessible.
   * HTML served from local file system instead of from a server.
-  * MSIE6, possible even MSIE4.
+  * MSIE6, possible even MSIE4 (AMD mode only)
+    * At the time you load `m.js`, the shims (`es5-shim.min.js`) from package
+      `es5-shim` must be loaded already, and there must be no fake
+      `Object.definePropery` yet, so don't load the shams (with letter a)
+      from that package. If you need them, too, load them after `m.js`.
+      An example can be found in [test/inspect.html](test/inspect.html).
+
 
 
 <!--#toc stop="scan" -->

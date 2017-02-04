@@ -3,6 +3,7 @@
 /*global define:true */
 define(function (require, exports) {
   'use strict';
+  if (!Object.keys) { throw new Error('inspect.js: Object.keys unsupported'); }
   var EX = exports, mf = require('cjs-minifake-pmb'),
     modReg = mf.require.internalCache();
 

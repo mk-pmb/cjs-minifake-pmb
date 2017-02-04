@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test it in a browser</title>
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+</head><body>
+
+<div id="pre-console-loading-hint">
+  <h3>Loading sham "pre-console"…</h3>
+  <p>If this message persists, you may want to look at your browser's
+  integrated debug console instead.</p>
+</div>
+<script src="../../amdldr16-pmb/lib/dirty-shams/pre-console.js"></script>
+
+<script src="../../es5-shim/es5-shim.min.js"></script>
+<!-- Don't load the shams yet, or m.js will try to Object.defineProperty! -->
+<script src="../m.js"></script>
+<!-- Now load the shams as well because inspect.js needs Array#filter. -->
+<script src="../../es5-shim/es5-sham.min.js"></script>
+
+<script src="../inspect.js"></script>
+<script>/*jslint indent: 2, maxlen: 80, browser: true */
+(function () {
+  'use strict';
+  var inspect = require('../inspect.js');
+  console.log('names:', inspect.names());
+  console.log('files:', inspect.files().join('\n'));
+}());
+</script>
+
+</body></html>
