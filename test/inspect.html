@@ -22,6 +22,7 @@
 (function () {
   'use strict';
   var inspect = require('../inspect.js');
+  console.log('window:', require('window-pmb'));
   console.log('names:', inspect.names());
   console.log('files:', inspect.files().join('\n'));
 }());

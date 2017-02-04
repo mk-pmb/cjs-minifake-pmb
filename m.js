@@ -129,13 +129,16 @@
   function factory() {
     var EX = { fakeUrlPrefix: 'cjs-minifake://' }, modReg = Obj.cr0();
 
-    (function selfreg(fakeCoreUrl) {
-      // fakeUrl: because we can't detect the script name without a document,
-      // but also don't want defer selfreg until a window and document is set.
-      modReg[fakeCoreUrl] = EX;
-      modReg[':cjs-minifake-pmb'] = fakeCoreUrl;
-    }(EX.fakeUrlPrefix + 'core'));
-    modReg[EX.fakeUrlPrefix + 'urlLib'] = urlLib;
+    function fakeMod(modFile, modObj, modName) {
+      var modUrl = EX.fakeUrlPrefix + modFile;
+      // Using fake URLs because we can't detect the script name without
+      // a document, but also don't want defer selfreg until a window and
+      // document is set.
+      modReg[modUrl] = modObj;
+      if (modName) { modReg[':' + modName] = modUrl; }
+    }
+    fakeMod('core', EX, 'cjs-minifake-pmb');
+    fakeMod('urlLib', urlLib);
 
     EX.window = false;
     EX.setWindow = function (win) {
@@ -146,12 +149,12 @@
         }
       }
       EX.window = win;
+      fakeMod('window', win);
+      fakeMod('window-pmb', win);
       if (win.require || win.module || win.exports) { return; }
       if (!win.define) { win.define = EX.define; }
       win.module = EX.module;
       win.require = EX.require;
-      modReg['cjs-minifake://window'] = win;
-      modReg['cjs-minifake://document'] = win.document;
       if (Obj.defPr) {
         Obj.defPr(win, 'exports', EX.getExports, { configurable: false });
       }
@@ -161,13 +164,13 @@
 
     EX.require = function req(opts, modUrl) {
       modUrl = EX.require.resolve(opts, modUrl);
-      opts = modReg[modUrl];
-      if (opts) { return opts; }
+      var modObj = modReg[modUrl];
+      if (modObj) { return modObj; }
       return fail('reqire: module not available: ' + modUrl);
     };
 
     EX.require.resolve = function (opts, modSpec) {
-      var modUrl, foundWithSuffix = '', baseUrl;
+      var modUrl, found = '', baseUrl;
       if (isStr(opts)) {
         modSpec = opts;
         opts = {};
@@ -191,11 +194,13 @@
       if (!modUrl) { return fail('unsupported module spec: ' + modSpec); }
       if (modReg[modUrl]) { return modUrl; }
       (opts.suffixes || EX.require.suffixes).forEach(function (sfx) {
-        if (foundWithSuffix) { return; }
+        if (found) { return; }
         sfx = modUrl + sfx;
-        if (modReg[sfx]) { foundWithSuffix = sfx; }
+        if (modReg[sfx]) { found = sfx; }
       });
-      if (foundWithSuffix) { return foundWithSuffix; }
+      if (found) { return found; }
+      found = EX.fakeUrlPrefix + modSpec;
+      if (modReg[found]) { return found; }
       return fail('Module not available: ' + quot(modSpec) +
         (modSpec === modUrl ? '' : ' = ' + quot(modUrl)));
     };
