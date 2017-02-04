@@ -1,5 +1,5 @@
 { "name": "cjs-minifake-pmb",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Yet another \"modules in browsers\" sham.",
   "keywords": [ "browser", "module", "modules", "sham" ],
 
