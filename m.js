@@ -227,8 +227,9 @@
     };
 
     EX.guessModuleUrl = function guessModuleUrlFromScriptTag(registerModName) {
-      var sTag = EX.guessActiveScriptTag(), modName,
-        modUrl = urlLib.normalizeFileUrl(sTag.src, EX.pageUrl());
+      var sTag = EX.guessActiveScriptTag(), modName, modUrl = sTag.src,
+        docUrl = EX.pageUrl();
+      modUrl = (modUrl ? urlLib.normalizeFileUrl(modUrl, docUrl) : docUrl);
       if (!modUrl) { return fail('guessModuleUrlFromScriptTag(): no url'); }
       if (modReg[modUrl]) {
         // we've seen it before, no need to guess its name again.
