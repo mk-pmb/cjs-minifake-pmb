@@ -1,16 +1,16 @@
 { "name": "cjs-minifake-pmb",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Yet another \"modules in browsers\" sham.",
   "keywords": [ "browser", "module", "modules", "sham" ],
 
   "author": "M.K. (https://github.com/mk-pmb)",
-  "homepage": "https://github.com/mk-pmb/cjs-minifake-pmb-js#readme",
+  "homepage": "https://github.com/mk-pmb/cjs-minifake-pmb#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mk-pmb/cjs-minifake-pmb-js.git"
+    "url": "git+https://github.com/mk-pmb/cjs-minifake-pmb.git"
   },
   "bugs": {
-    "url": "https://github.com/mk-pmb/cjs-minifake-pmb-js/issues"
+    "url": "https://github.com/mk-pmb/cjs-minifake-pmb/issues"
   },
 
   "private": false, "license": "ISC",
