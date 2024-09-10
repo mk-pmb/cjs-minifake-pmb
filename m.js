@@ -297,13 +297,19 @@
     };
 
     EX.define = function defineModule(modName, modExports) {
-      var srcUrl = EX.guessModuleUrl(true), modFac, tmpMod = modReg[srcUrl];
+      var srcUrl = EX.guessModuleUrl(true), modFac, m = modReg[srcUrl];
       if (!isStr(modName)) {
         modExports = modName;
         modName = null;
       }
       //console.log('amd.define()ing:', modName);
-      if (!Obj.empty(tmpMod)) {
+      if (srcUrl === EX.pageUrl()) {
+        m = ('A module cannot be registered as the same URL as the currently'
+          + ' loaded webpage. This can occurr if you accidentially loaded'
+          + ' the module asynchronously, e.g. as type=module.');
+        fail(m);
+      }
+      if (!Obj.empty(m)) {
         if (modExports === EX) {
           return; /* Probably because there was no previous define().amd,
             ours was installed to the window global, and thus the UMD loader
@@ -316,11 +322,11 @@
         if (typeof modExports === 'function') {
           modFac = modExports;
           modExports = {};
-          tmpMod = { filename: srcUrl, exports: modExports,
+          m = { filename: srcUrl, exports: modExports,
             scriptTag: EX.guessActiveScriptTag() };
           modFac = modFac(bind1(EX.require, { origin: srcUrl }),
-            modExports, tmpMod);
-          if (tmpMod.exports) { modExports = tmpMod.exports; }
+            modExports, m);
+          if (m.exports) { modExports = m.exports; }
           if (modFac && Obj.empty(modExports)) { modExports = modFac; }
         }
         modReg[srcUrl] = modExports;
