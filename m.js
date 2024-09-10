@@ -1,7 +1,7 @@
 ﻿/*jslint indent: 2, maxlen: 80, browser: true */
 /* -*- tab-width: 2 -*- */
 /*globals define: true */
-(function () {
+(function setup() {
   'use strict';
 
   function orf(x) { return (x || false); }
@@ -12,7 +12,7 @@
   function arrLast(o, i) { return orf(o[o.length - (i || 1)]); }
   function fail(why) { throw new Error(String(why)); }
   function failIf(e, m) { if (e) { fail(m || e); } }
-  isStr.must = function (x, d) { failIf(!isStr(x), d + ' must be a string'); };
+  function mustBeStr(x, d) { failIf(!isStr(x), d + ' must be a string'); }
   function strSplit(tx, rgx) { return String(tx || '').split(rgx); }
 
   function isMsieCallableObj(f) {
@@ -28,8 +28,8 @@
   var Obj = {}, urlLib;
   Obj.cr0 = bind1(ifFun(Object.create, Object), null);
 
-  Obj.defPr = (function (odp) {
-    return (odp && function (obj, prop, get, opts) {
+  Obj.defPr = (function defProp(odp) {
+    return (odp && function defPropStub(obj, prop, get, opts) {
       opts = (opts ? (ifFun(opts) ? { set: opts } : opts) : {});
       opts.get = get;
       opts.enumerable = true;
@@ -37,26 +37,29 @@
     });
   }(orf(Object.defineProperty)));
 
-  Obj.empty = (function (k, e) {
-    e = (k ? function (x) { return (k(x).length === 0); } : function (x) {
+  Obj.empty = (function compile() {
+    var k = Object.keys;
+    if (k) {
+      return function objIsEmpty(x) { return (k(x).length === 0); };
+    }
+    return function objIsEmpty(x) {
       var p;
       for (p in x) {
         if (Object.prototype.hasOwnProperty.call(x, p)) { return false; }
       }
       return true;
-    });
-    return function (x) { return (ifObj(x) && e(x)); };
-  }(Object.keys));
+    };
+  }());
 
 
-  urlLib = (function () {
-    var EX = {};
+  urlLib = (function compileUrlLib() {
+    var EX = {}, resoRel;
 
     EX.nextPathCompoIsModName = /([\w\-])(\/{2})/g;
     EX.windowsFilePathRgx = /^file:\/+([A-Za-z]:|)\\/;
     EX.rgxNonDotChar = /[\x00-\-\/-\uFFFF]/;
 
-    EX.resolveRelativePath = function (origin, destPath, originHint) {
+    resoRel = function resolveRelativePath(origin, destPath, originHint) {
       EX.findProtocol(origin, '.resolveRelativePath origin for ' + originHint);
       //console.log('resolveRelativePath:', origin, '->', destPath);
       origin = EX.splitServerRelPath(origin);
@@ -65,7 +68,7 @@
         destPath = EX.splitPath(destPath);
       }
       while (destSub[0] === '.') { destSub.shift(); }
-      destPath.forEach(function (dir) {
+      destPath.forEach(function each(dir) {
         if ((dir === '..') && (destSub.length > 0)) { destSub.pop(); }
         if ((dir === '') || EX.rgxNonDotChar.exec(dir)) { destSub.push(dir); }
       });
@@ -73,8 +76,9 @@
       if (destSub[0] !== '/') { destSub = '/' + destSub; }
       return origin.basePath + destSub;
     };
+    EX.resolveRelativePath = resoRel;
 
-    EX.splitServerRelPath = function (url) {
+    EX.splitServerRelPath = function splitServerRelPath(url) {
       /* For simple URIs, this split should be roughly the same as
       /  location.{origin,pathname}. However, for URLs with server names
       /  in them (e.g. Wayback machine), the origin part here is greedy,
@@ -86,36 +90,38 @@
       return { basePath: url.join(''), relPath: rel };
     };
 
-    EX.splitPath = function (path) { return strSplit(path, /\/(?:\.\/)*/); };
+    EX.splitPath = function splitPath(path) {
+      return strSplit(path, /\/(?:\.\/)*/);
+    };
 
-    EX.findProtocol = function (url, mustHave) {
+    EX.findProtocol = function findProtocol(url, mustHave) {
       var proto = String(url).match(/^([a-z]{2,8}):/);
       if (proto) { return proto[0]; }
       if (!mustHave) { return ''; }
       fail('Unable to find protocol name in ' + mustHave + ' = ' + url);
     };
 
-    EX.parentDir = function (path, fmt) {
+    EX.parentDir = function parentDir(path, fmt) {
       path = EX.splitPath(path).slice(0, -1);
       if (fmt === Array) { return path; }
       return (path.legth > 0 ? path.join('/') : '.');
     };
 
-    EX.fileUrlOnly = function (url) {
+    EX.fileUrlOnly = function fileUrlOnly(url) {
       return String(url || '').split(/#|\?/)[0];
     };
 
-    EX.slashWindowsPath = function (p) {
+    EX.slashWindowsPath = function slashWindowsPath(p) {
       return (p.match(EX.windowsFilePathRgx) ? p.replace(/\\/g, '/') : p);
     };
 
-    EX.normalizeFileUrl = function (url, origin) {
+    EX.normalizeFileUrl = function normalizeFileUrl(url, origin) {
       if (ifObj(url)) { url = url.href || url.src; }
       url = EX.fileUrlOnly(url);
       url = EX.slashWindowsPath(url);
       url = url.replace(EX.nextPathCompoIsModName, '$1/');
       if (origin && (!EX.findProtocol(url))) {
-        url = EX.resolveRelativePath(origin, url, '.normalizeFileUrl');
+        url = resoRel(origin, url, '.normalizeFileUrl');
       }
       return url;
     };
@@ -141,7 +147,7 @@
     fakeMod('urlLib', urlLib);
 
     EX.window = false;
-    EX.setWindow = function (win) {
+    EX.setWindow = function setWindow(win) {
       var byTag = orf(orf(win).document).getElementsByTagName;
       if (!ifFun(byTag)) {
         if (!isMsieCallableObj(byTag)) {
@@ -169,13 +175,13 @@
       return fail('reqire: module not available: ' + modUrl);
     };
 
-    EX.require.resolve = function (opts, modSpec) {
+    EX.require.resolve = function requireResolve(opts, modSpec) {
       var modUrl, found = '', baseUrl;
       if (isStr(opts)) {
         modSpec = opts;
         opts = {};
       }
-      isStr.must(modSpec, 'module name');
+      mustBeStr(modSpec, 'module name');
       if ((!modUrl) && modSpec.match(/^\.{1,2}\//)) {
         //console.log('resolve: origin:', opts.origin);
         baseUrl = (opts.origin || EX.guessModuleUrl(false));
@@ -193,7 +199,7 @@
       }
       if (!modUrl) { return fail('unsupported module spec: ' + modSpec); }
       if (modReg[modUrl]) { return modUrl; }
-      (opts.suffixes || EX.require.suffixes).forEach(function (sfx) {
+      (opts.suffixes || EX.require.suffixes).forEach(function runFx(sfx) {
         if (found) { return; }
         sfx = modUrl + sfx;
         if (modReg[sfx]) { found = sfx; }
@@ -206,22 +212,22 @@
     };
     EX.require.suffixes = ['.js', '.json'];
 
-    EX.require.internalCache = function () { return modReg; };
+    EX.require.internalCache = function getCache() { return modReg; };
 
-    EX.pageUrl = function () {
+    EX.pageUrl = function detectPageUrl() {
       var url = urlLib.slashWindowsPath(EX.doc().URL);
       urlLib.findProtocol(url, 'document.URL');
       return url;
     };
 
-    EX.getExports = function (modUrl) {
+    EX.getExports = function getExports(modUrl) {
       if (!modUrl) { modUrl = EX.guessModuleUrl(true); }
       // ^-- guessModuleUrl will also ensure there's at least an empty object.
       return modReg[modUrl];
     };
 
-    EX.setExports = function (modUrl, exp) {
-      isStr.must(modUrl, 'modUrl for .setExports');
+    EX.setExports = function setExports(modUrl, exp) {
+      mustBeStr(modUrl, 'modUrl for .setExports');
       if (!modUrl) { modUrl = EX.guessModuleUrl(true); }
       var prevExp = modReg[modUrl];
       if (!prevExp) { fail("guessModuleUrl hasn't prepared empty exports??"); }
@@ -249,22 +255,22 @@
       return modUrl;
     };
 
-    EX.registerModuleByName = function (modName, modUrl) {
+    EX.registerModuleByName = function registerModuleByName(modName, modUrl) {
       if (!modName) { return; }
-      isStr.must(modUrl, 'modUrl for .registerModuleByName');
+      mustBeStr(modUrl, 'modUrl for .registerModuleByName');
       if (modReg[':' + modName]) {
         return fail("won't replace registered module " + modName);
       }
       modReg[':' + modName] = modUrl;
     };
 
-    EX.module = (Obj.defPr && (function (m) {
+    EX.module = (Obj.defPr && (function defineModuleProperties(m) {
       Obj.defPr(m, 'filename', bind1(EX.guessModuleUrl, false));
       Obj.defPr(m, 'exports', EX.getExports, bind1(EX.setExports, ''));
       Obj.defPr(m, 'scriptTag', EX.guessActiveScriptTag);
     }(Obj.cr0())));
 
-    EX.doc = function () {
+    EX.doc = function getDoc() {
       var doc = orf(EX.window).document;
       if (ifObj(doc)) { return doc; }
       return fail('Supply a window via .setWindow() first');
@@ -280,17 +286,17 @@
 
     EX.moduleNameRgx = /^[A-Za-z0-9_\-]+$/;
 
-    EX.guessModuleNameFromScriptTag = function (sTag) {
-      var modName = sTag.getAttribute('modname');
+    EX.guessModuleNameFromScriptTag = function guessModNameFromScriptTag(tag) {
+      var modName = tag.getAttribute('modname');
       if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
-      modName = sTag.getAttribute('src');
+      modName = tag.getAttribute('src');
       modName = modName && arrLast(modName.split(EX.nextPathCompoIsModName)
         ).split(/\/|\./)[0];
       if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
       return '';
     };
 
-    EX.define = function (modName, modExports) {
+    EX.define = function defineModule(modName, modExports) {
       var srcUrl = EX.guessModuleUrl(true), modFac, tmpMod = modReg[srcUrl];
       if (!isStr(modName)) {
         modExports = modName;
@@ -328,6 +334,8 @@
     if ((typeof window === 'object') && window) { EX.setWindow(window); }
     return EX;
   }
+
+
 
   if ((typeof define === 'function') && define.amd) { return define(factory); }
   (function (e, m) { if (m && m.exports) { m.exports = e; } }(factory(),
