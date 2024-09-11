@@ -138,8 +138,8 @@
     function fakeMod(modFile, modObj, modName) {
       var modUrl = EX.fakeUrlPrefix + modFile;
       // Using fake URLs because we can't detect the script name without
-      // a document, but also don't want defer selfreg until a window and
-      // document is set.
+      // a document, but also don't want to defer selfreg until a window
+      // and a document are set.
       modReg[modUrl] = modObj;
       if (modName) { modReg[':' + modName] = modUrl; }
     }
