@@ -309,28 +309,25 @@
           + ' the module asynchronously, e.g. as type=module.');
         fail(m);
       }
-      if (!Obj.empty(m)) {
-        if (modExports === EX) {
-          return; /* Probably because there was no previous define().amd,
-            ours was installed to the window global, and thus the UMD loader
-            at the end of this script called it a 2nd time. */
-        }
-        if (modExports !== modReg[srcUrl]) {
-          return fail('cannot re-define().amd module ' + srcUrl);
-        }
-      } else {
-        if (typeof modExports === 'function') {
-          modFac = modExports;
-          modExports = {};
-          m = { filename: srcUrl, exports: modExports,
-            scriptTag: EX.guessActiveScriptTag() };
-          modFac = modFac(bind1(EX.require, { origin: srcUrl }),
-            modExports, m);
-          if (m.exports) { modExports = m.exports; }
-          if (modFac && Obj.empty(modExports)) { modExports = modFac; }
-        }
-        modReg[srcUrl] = modExports;
+
+      (function checkConflict() {
+        var had = modReg[srcUrl];
+        if (Obj.empty(had)) { return; }
+        if (modExports === modReg[srcUrl]) { return; }
+        fail('cannot re-define().amd module ' + srcUrl);
+      }());
+
+      if (typeof modExports === 'function') {
+        modFac = modExports;
+        modExports = {};
+        m = { filename: srcUrl, exports: modExports,
+          scriptTag: EX.guessActiveScriptTag() };
+        modFac = modFac(bind1(EX.require, { origin: srcUrl }),
+          modExports, m);
+        if (m.exports) { modExports = m.exports; }
+        if (modFac && Obj.empty(modExports)) { modExports = modFac; }
       }
+      modReg[srcUrl] = modExports;
       //console.log('amd.define()d:', srcUrl);
       EX.registerModuleByName(modName, modName, srcUrl);
     };
