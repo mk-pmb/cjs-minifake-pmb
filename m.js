@@ -27,6 +27,7 @@
 
   var Obj = {}, urlLib;
   Obj.cr0 = bind1(ifFun(Object.create, Object), null);
+  // Obj.hasOwn = Function.call.bind(Object.prototype.hasOwnProperty);
 
   Obj.defPr = (function defProp(odp) {
     return (odp && function defPropStub(obj, prop, get, opts) {
@@ -45,6 +46,7 @@
     return function objIsEmpty(x) {
       var p;
       for (p in x) {
+        // Not using Obj.hasOwn here b/c jslint expects the full incantation.
         if (Object.prototype.hasOwnProperty.call(x, p)) { return false; }
       }
       return true;
