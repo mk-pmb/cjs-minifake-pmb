@@ -287,13 +287,31 @@
     EX.moduleNameRgx = /^[A-Za-z0-9_\-]+$/;
 
     EX.guessModuleNameFromScriptTag = function guessModNameFromScriptTag(tag) {
-      var modName = tag.getAttribute('modname');
-      if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
-      modName = tag.getAttribute('src');
-      modName = modName && arrLast(modName.split(EX.doubleSlashModNameHint)
-        ).split(/\/|\./)[0];
-      if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
-      return '';
+      var modName, src = tag.getAttribute('src'),
+        trace = 'CJS minifake: guessModuleNameFromScriptTag:';
+      modName = (function guessInternal() {
+        var mn = tag.getAttribute('modname') || '';
+        if (mn) { return mn; }
+        if (!src) { return ''; }
+
+        mn = src.split(EX.doubleSlashModNameHint);
+        if (mn.length >= 2) { return arrLast(mn).split(/\/|\./)[0]; }
+
+        mn = src.split(/(?:^|\/)node_modules\//);
+        if (mn.length >= 2) { return arrLast(mn).split('/')[0]; }
+      }());
+      if (!modName) { return ''; }
+      if (!EX.moduleNameRgx.exec(modName)) {
+        console.warn(trace, 'Discard scary module name:', modName);
+        return '';
+      }
+      if (modName === 'node_modules') {
+        console.error(trace, 'Module name must not be "node_modules"!'
+          + ' Use modname="" or a double slash before the directory name'
+          + ' to indicate the actual module name of', src);
+        return '';
+      }
+      return modName;
     };
 
     EX.define = function defineModule(modName, modExports) {
