@@ -368,7 +368,7 @@
       }
       modReg[srcUrl] = expo;
       //console.log('amd.define()d:', srcUrl);
-      EX.registerModuleByName(modName, modName, srcUrl);
+      EX.registerModuleByName(name, srcUrl);
     };
     EX.define.amd = true;
 
