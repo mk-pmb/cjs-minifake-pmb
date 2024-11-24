@@ -322,13 +322,21 @@
       return modName;
     };
 
-    EX.define = function defineModule(modName, modExports) {
-      var srcUrl = EX.guessModuleUrl(true), modFac, m = modReg[srcUrl];
-      if (!isStr(modName)) {
-        modExports = modName;
-        modName = null;
+    EX.define = function defineModule(name, im, ex) {
+      if (name === EX) {
+        return; /* Probably because there was no previous define().amd,
+          ours was installed to the window global, and thus the UMD loader
+          at the end of this script called it a 2nd time. */
       }
-      //console.log('amd.define()ing:', modName);
+      if (!isStr(name)) { return defineModule('', name, im); }
+      if (ex === undefined) { return defineModule(name, 0, im); }
+      if (im && (!Array.isArray(im))) { return defineModule(name, 0, im); }
+      EX.define3args(name, im, ex);
+    };
+
+    EX.define3args = function defineModule(name, impo, expo) {
+      var srcUrl = EX.guessModuleUrl(true), m, modFac;
+      //console.log('amd.define()ing:', name);
       if (srcUrl === EX.pageUrl()) {
         m = ('A module cannot be registered as the same URL as the currently'
           + ' loaded webpage. This can occurr if you accidentially loaded'
@@ -336,24 +344,29 @@
         fail(m);
       }
 
+      if (impo) {
+        m = function moduleNameNotRegistered(id) { return !modReg[':' + id]; };
+        m = impo.filter(m);
+        if (m.length) { fail('Missing dependencies for', srcUrl, ':', m); }
+      }
+
       (function checkConflict() {
         var had = modReg[srcUrl];
         if (Obj.empty(had)) { return; }
-        if (modExports === modReg[srcUrl]) { return; }
+        if (expo === modReg[srcUrl]) { return; }
         fail('cannot re-define().amd module ' + srcUrl);
       }());
 
-      if (typeof modExports === 'function') {
-        modFac = modExports;
-        modExports = {};
-        m = { filename: srcUrl, exports: modExports,
+      if (typeof expo === 'function') {
+        modFac = expo;
+        expo = {};
+        m = { filename: srcUrl, exports: expo,
           scriptTag: EX.guessActiveScriptTag() };
-        modFac = modFac(bind1(EX.require, { origin: srcUrl }),
-          modExports, m);
-        if (m.exports) { modExports = m.exports; }
-        if (modFac && Obj.empty(modExports)) { modExports = modFac; }
+        modFac = modFac(bind1(EX.require, { origin: srcUrl }), expo, m);
+        if (m.expo) { expo = m.exports; }
+        if (modFac && Obj.empty(expo)) { expo = modFac; }
       }
-      modReg[srcUrl] = modExports;
+      modReg[srcUrl] = expo;
       //console.log('amd.define()d:', srcUrl);
       EX.registerModuleByName(modName, modName, srcUrl);
     };
