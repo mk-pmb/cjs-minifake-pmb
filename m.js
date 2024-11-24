@@ -257,13 +257,19 @@
       return modUrl;
     };
 
-    EX.registerModuleByName = function registerModuleByName(modName, modUrl) {
-      if (!modName) { return; }
+    EX.registerModuleByName = function registerModuleByName(name, modUrl) {
+      if (!name) { return; }
+      var knownUrl = modReg[':' + name];
       mustBeStr(modUrl, 'modUrl for .registerModuleByName');
-      if (modReg[':' + modName]) {
-        return fail("won't replace registered module " + modName);
+      if (knownUrl && (knownUrl !== modUrl)) {
+        console.error('CJS minifake: Conflicting existing module:', {
+          modName: name,
+          alreadyKnownUrl: knownUrl,
+          regAttemptUrl: modUrl,
+        });
+        return fail("won't replace registered module " + name);
       }
-      modReg[':' + modName] = modUrl;
+      modReg[':' + name] = modUrl;
     };
 
     EX.module = (Obj.defPr && (function defineModuleProperties(m) {
