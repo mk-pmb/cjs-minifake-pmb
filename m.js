@@ -55,7 +55,7 @@
   urlLib = (function compileUrlLib() {
     var EX = {}, resoRel;
 
-    EX.nextPathCompoIsModName = /([\w\-])(\/{2})/g;
+    EX.doubleSlashModNameHint = /([\w\-])(\/{2})/g;
     EX.windowsFilePathRgx = /^file:\/+([A-Za-z]:|)\\/;
     EX.rgxNonDotChar = /[\x00-\-\/-\uFFFF]/;
 
@@ -119,7 +119,7 @@
       if (ifObj(url)) { url = url.href || url.src; }
       url = EX.fileUrlOnly(url);
       url = EX.slashWindowsPath(url);
-      url = url.replace(EX.nextPathCompoIsModName, '$1/');
+      url = url.replace(EX.doubleSlashModNameHint, '$1/');
       if (origin && (!EX.findProtocol(url))) {
         url = resoRel(origin, url, '.normalizeFileUrl');
       }
@@ -290,7 +290,7 @@
       var modName = tag.getAttribute('modname');
       if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
       modName = tag.getAttribute('src');
-      modName = modName && arrLast(modName.split(EX.nextPathCompoIsModName)
+      modName = modName && arrLast(modName.split(EX.doubleSlashModNameHint)
         ).split(/\/|\./)[0];
       if (modName && EX.moduleNameRgx.exec(modName)) { return modName; }
       return '';
