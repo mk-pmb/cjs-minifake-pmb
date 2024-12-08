@@ -128,6 +128,14 @@
       return url;
     };
 
+    EX.guessModuleNameFromExplicitUrlHints = function guess(url) {
+      if (!url) { return ''; }
+      url = String(url);
+      var mn = url.split(EX.doubleSlashModNameHint);
+      if (mn.length >= 2) { return arrLast(mn).split(/\/|\./)[0]; }
+      return '';
+    };
+
     return EX;
   }());
 
@@ -302,8 +310,8 @@
         if (mn) { return mn; }
         if (!src) { return ''; }
 
-        mn = src.split(EX.doubleSlashModNameHint);
-        if (mn.length >= 2) { return arrLast(mn).split(/\/|\./)[0]; }
+        mn = urlLib.guessModuleNameFromExplicitUrlHints(src);
+        if (mn) { return mn; }
 
         mn = src.split(/(?:^|\/)node_modules\//);
         if (mn.length >= 2) { return arrLast(mn).split('/')[0]; }
